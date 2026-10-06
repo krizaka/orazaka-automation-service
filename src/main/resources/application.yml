@@ -1,0 +1,111 @@
+spring:
+  application:
+    name: orazaka-automation-worker
+  # Loom: AGENTS.md §4. This host is AMQP-first, but its web surface and outbound calls are
+  # blocking all the same, and a service that opts out silently is how the setting drifted.
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/orazaka_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    hikari:
+      maximum-pool-size: 5
+      idle-timeout: 300000
+      max-lifetime: 600000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: false
+
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
+    properties:
+      org.quartz.scheduler.instanceName: OrazakaAutomationScheduler
+      org.quartz.scheduler.instanceId: AUTO
+      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+      org.quartz.jobStore.tablePrefix: QRTZ_
+      org.quartz.jobStore.isClustered: false
+      org.quartz.threadPool.threadCount: 5
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+    # Propagate traceparent across the broker (producer + consumer observations).
+    template:
+      observation-enabled: true
+    listener:
+      simple:
+        observation-enabled: true
+        acknowledge-mode: auto
+        default-requeue-rejected: false
+        # Exponential backoff (AGENTS.md §6); exhausted retries dead-letter to <queue>.dlq.
+        retry:
+          enabled: true
+          max-attempts: ${RABBITMQ_RETRY_MAX_ATTEMPTS:3}
+          initial-interval: ${RABBITMQ_RETRY_INITIAL_INTERVAL:1s}
+          multiplier: 2.0
+          max-interval: 10s
+
+# Standalone Spring Boot module exposed health check at /actuator/health (port 8082)
+server:
+  port: ${AUTOMATION_PORT:8082}
+
+# Distributed tracing (Phase 0): OTLP/HTTP export to the local Jaeger container.
+management:
+  endpoints:
+    web:
+      exposure:
+        # health for the harness's readiness gate, info for its identity check: a service that
+        # cannot say which build it is cannot be distinguished from a process left over by a
+        # previous e2e run answering on the same port (ADR-071 §2).
+        include: health, info
+  otlp:
+    tracing:
+      endpoint: ${OTEL_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+
+logging:
+  file:
+    name: ${ORAZAKA_AUTOMATION_WORKER_LOG:var/logs/automation-worker.log}
+  logback:
+    rollingpolicy:
+      max-file-size: 1MB
+      total-size-cap: 10MB
+      max-history: 7
+  level:
+    com.orazaka.automation: DEBUG
+    org.springframework.amqp: INFO
+    org.quartz: INFO
+
+# ── Orazaka — service-owned wiring ────────────────────────────────────────────
+orazaka:
+  billing:
+    # Bootstrap switch only — the enforcement mode is a row owned by the billing
+    # service. Default OFF wires the no-op adapter, so this service behaves
+    # exactly as before until billing is deliberately turned on.
+    enabled: ${BILLING_ENABLED:false}
+    base-url: ${BILLING_INTERNAL_URL:http://localhost:8095}
+    # Mints the SERVICE token /internal/v1/billing requires (ADR-035). It was absent from
+    # every consumer, so BILLING_ENABLED=true crashed each of them at startup with "the
+    # shared identity secret is required" — billing had never been switched on anywhere.
+    service-secret: ${IDENTITY_JWT_SECRET:orazaka-local-dev-identity-jwt-secret-256bit!}
+    connect-timeout: ${BILLING_CONNECT_TIMEOUT:500ms}
+    read-timeout: ${BILLING_READ_TIMEOUT:2s}
+  automation-service:
+    datasource:
+      url: ${AUTOMATION_DB_URL:jdbc:postgresql://localhost:5432/orazaka_automation_db}
+      username: ${AUTOMATION_DB_USERNAME:orazaka_automation}
+      password: ${AUTOMATION_DB_PASSWORD}
