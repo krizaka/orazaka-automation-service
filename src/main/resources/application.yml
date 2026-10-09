@@ -113,6 +113,11 @@ krizaka:
     connect-timeout: ${BILLING_CONNECT_TIMEOUT:500ms}
     read-timeout: ${BILLING_READ_TIMEOUT:2s}
   messaging:
+    exchanges:
+      # Orazaka's bus: the Krizaka building blocks this service embeds (billing-client) publish and
+      # listen on it.
+      events: orazaka.events
+      dead-letter: orazaka.dlx
     dedup:
       # Claims are rows in this context's processed_messages table: durable, shared by every
       # instance, arbitrated by its primary key.
