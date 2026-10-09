@@ -35,4 +35,4 @@ server:
 
 logging:
   level:
-    com.orazaka.automation: DEBUG
+    com.krizaka.orazaka.automation: DEBUG

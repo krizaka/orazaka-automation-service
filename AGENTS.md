@@ -10,7 +10,7 @@
 
 - **Role:** Connector automation (Jira, Slack, WhatsApp, Messenger, CLI agents) with Quartz scheduling and execution telemetry.
 - **Layer:** Orazaka AI engine
-- **Depends on:** orazaka-build, orazaka-billing — never on another repository's Tier-3 implementation (AGENTS.md §2, [SEAM-002]).
+- **Depends on:** orazaka-build, krizaka-billing — never on another repository's Tier-3 implementation (AGENTS.md §2, [SEAM-002]).
 - **Workspace path:** `orazaka-apps/services/orazaka-automation-service`
 
 ## Definition of done

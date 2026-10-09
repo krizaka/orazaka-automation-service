@@ -86,12 +86,20 @@ logging:
       total-size-cap: 10MB
       max-history: 7
   level:
-    com.orazaka.automation: DEBUG
+    com.krizaka.orazaka.automation: DEBUG
     org.springframework.amqp: INFO
     org.quartz: INFO
 
 # ── Orazaka — service-owned wiring ────────────────────────────────────────────
 orazaka:
+  automation-service:
+    datasource:
+      url: ${AUTOMATION_DB_URL:jdbc:postgresql://localhost:5432/orazaka_automation_db}
+      username: ${AUTOMATION_DB_USERNAME:orazaka_automation}
+      password: ${AUTOMATION_DB_PASSWORD}
+
+# ── Krizaka platform kit ──────────────────────────────────────────────────────
+krizaka:
   billing:
     # Bootstrap switch only — the enforcement mode is a row owned by the billing
     # service. Default OFF wires the no-op adapter, so this service behaves
@@ -104,8 +112,13 @@ orazaka:
     service-secret: ${IDENTITY_JWT_SECRET:orazaka-local-dev-identity-jwt-secret-256bit!}
     connect-timeout: ${BILLING_CONNECT_TIMEOUT:500ms}
     read-timeout: ${BILLING_READ_TIMEOUT:2s}
-  automation-service:
-    datasource:
-      url: ${AUTOMATION_DB_URL:jdbc:postgresql://localhost:5432/orazaka_automation_db}
-      username: ${AUTOMATION_DB_USERNAME:orazaka_automation}
-      password: ${AUTOMATION_DB_PASSWORD}
+  messaging:
+    exchanges:
+      # Orazaka's bus: the Krizaka building blocks this service embeds (billing-client) publish and
+      # listen on it.
+      events: orazaka.events
+      dead-letter: orazaka.dlx
+    dedup:
+      # Claims are rows in this context's processed_messages table: durable, shared by every
+      # instance, arbitrated by its primary key.
+      store: jdbc

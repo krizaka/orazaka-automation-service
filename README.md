@@ -28,13 +28,13 @@ Connector automation (port `8082`): consumes `job.automation.*`, dispatches to J
 WhatsApp / Messenger connectors or to a user's CLI agent (`job.agent.dispatch.{userId}`), Quartz
 scheduling, `evt.automation.telemetry`. Own database `orazaka_automation_db`
 (`infra/initdb/50-automation.sql`). User-facing notifications moved to
-[orazaka-notifications](https://github.com/krizaka/orazaka-notifications).
+[krizaka-notifications](https://github.com/krizaka/krizaka-notifications).
 
 ## Position in the platform
 
 | | |
 |:---|:---|
-| Depends on | [`orazaka-build`](https://github.com/krizaka/orazaka-build) · [`orazaka-billing`](https://github.com/krizaka/orazaka-billing) |
+| Depends on | [`orazaka-build`](https://github.com/krizaka/orazaka-build) · [`krizaka-billing`](https://github.com/krizaka/krizaka-billing) |
 | Used by | _no other Orazaka repository._ |
 | Workspace path | `orazaka-apps/services/orazaka-automation-service` |
 
