@@ -86,7 +86,7 @@ logging:
       total-size-cap: 10MB
       max-history: 7
   level:
-    com.orazaka.automation: DEBUG
+    com.krizaka.orazaka.automation: DEBUG
     org.springframework.amqp: INFO
     org.quartz: INFO
 
