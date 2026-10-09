@@ -6,8 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.lenient;
 
+import com.krizaka.messaging.dedup.MessageDedup;
 import com.orazaka.automationservice.application.service.ConnectorDispatcher;
-import com.orazaka.automationservice.application.service.MessageDedupService;
 import com.orazaka.automationservice.domain.model.AutomationJobPayload;
 import com.orazaka.automationservice.domain.model.AutomationJobStatus;
 import com.orazaka.automationservice.infrastructure.config.AmqpConstants;
@@ -32,7 +32,7 @@ class AutomationJobListenerTest {
 
   @Mock private RabbitTemplate rabbitTemplate;
   @Mock private ConnectorDispatcher connectorDispatcher;
-  @Mock private MessageDedupService messageDedupService;
+  @Mock private MessageDedup messageDedupService;
   private AutomationJobListener listener;
 
   @BeforeEach

@@ -109,3 +109,11 @@ orazaka:
       url: ${AUTOMATION_DB_URL:jdbc:postgresql://localhost:5432/orazaka_automation_db}
       username: ${AUTOMATION_DB_USERNAME:orazaka_automation}
       password: ${AUTOMATION_DB_PASSWORD}
+
+# ── Krizaka platform kit ──────────────────────────────────────────────────────
+krizaka:
+  messaging:
+    dedup:
+      # Claims are rows in this context's processed_messages table: durable, shared by every
+      # instance, arbitrated by its primary key.
+      store: jdbc

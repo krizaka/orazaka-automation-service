@@ -1,7 +1,7 @@
 package com.orazaka.automationservice.infrastructure.adapter.amqp;
 
+import com.krizaka.messaging.dedup.MessageDedup;
 import com.orazaka.automationservice.application.service.ConnectorDispatcher;
-import com.orazaka.automationservice.application.service.MessageDedupService;
 import com.orazaka.automationservice.domain.model.AutomationJobPayload;
 import com.orazaka.automationservice.domain.model.AutomationJobStatus;
 import com.orazaka.automationservice.infrastructure.config.AmqpConstants;
@@ -24,12 +24,12 @@ public class AutomationJobListener {
 
   private final RabbitTemplate rabbitTemplate;
   private final ConnectorDispatcher connectorDispatcher;
-  private final MessageDedupService messageDedupService;
+  private final MessageDedup messageDedupService;
 
   public AutomationJobListener(
       RabbitTemplate rabbitTemplate,
       ConnectorDispatcher connectorDispatcher,
-      MessageDedupService messageDedupService) {
+      MessageDedup messageDedupService) {
     this.rabbitTemplate = rabbitTemplate;
     this.connectorDispatcher = connectorDispatcher;
     this.messageDedupService = messageDedupService;
