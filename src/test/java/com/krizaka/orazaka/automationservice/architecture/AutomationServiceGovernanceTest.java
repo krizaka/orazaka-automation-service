@@ -1,5 +1,7 @@
 package com.krizaka.orazaka.automationservice.architecture;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 import com.krizaka.orazaka.test.architecture.ConfigBindingRules;
 import com.krizaka.orazaka.test.architecture.GovernanceRules;
 import com.krizaka.orazaka.test.architecture.LoggedContentRules;
@@ -43,7 +45,10 @@ class AutomationServiceGovernanceTest {
   @Test
   @DisplayName("[SEAM-002] automation-service depends on no foreign Tier-3 implementation")
   void dependsOnNoForeignTier3() {
-    GovernanceRules.assertNoForeignTier3Dependency(productionClasses, BASE_PACKAGE);
+    assertDoesNotThrow(
+        () -> {
+          GovernanceRules.assertNoForeignTier3Dependency(productionClasses, BASE_PACKAGE);
+        });
   }
 
   // GOV-006: [ADR-035] permitAll rule is not invoked here: this service exposes no HTTP endpoint
@@ -53,57 +58,84 @@ class AutomationServiceGovernanceTest {
   @Test
   @DisplayName("[ADR-035] /internal/v1 demands the SERVICE authority, not merely authentication")
   void internalSurfaceDemandsServiceAuthority() {
-    GovernanceRules.assertInternalSurfaceRequiresServiceAuthority(
-        Path.of(System.getProperty("user.dir"), "src", "main", "java"));
+    assertDoesNotThrow(
+        () -> {
+          GovernanceRules.assertInternalSurfaceRequiresServiceAuthority(
+              Path.of(System.getProperty("user.dir"), "src", "main", "java"));
+        });
   }
 
   @Test
   @DisplayName("[AGENTS.md §4] requests run on virtual threads")
   void requestsRunOnVirtualThreads() {
-    GovernanceRules.assertVirtualThreadsEnabled(Path.of(System.getProperty("user.dir")));
+    assertDoesNotThrow(
+        () -> {
+          GovernanceRules.assertVirtualThreadsEnabled(Path.of(System.getProperty("user.dir")));
+        });
   }
 
   @Test
   @DisplayName("[PACK-002] no pack, studio or pack-capability key is a literal in engine code")
   void noPackKeyLiteralsInEngineCode() {
-    GovernanceRules.assertNoPackKeyLiterals(REPOSITORY_ROOT);
+    assertDoesNotThrow(
+        () -> {
+          GovernanceRules.assertNoPackKeyLiterals(REPOSITORY_ROOT);
+        });
   }
 
   @Test
   @DisplayName("[PACK-003] engine code never branches on a pack identifier")
   void noPackKeyConditionalsInEngineCode() {
-    GovernanceRules.assertNoPackKeyConditionals(REPOSITORY_ROOT);
+    assertDoesNotThrow(
+        () -> {
+          GovernanceRules.assertNoPackKeyConditionals(REPOSITORY_ROOT);
+        });
   }
 
   @Test
   @DisplayName("[EXEC-001] every in-process capability's handler_key has an executor")
   void everyCapabilityHasAnExecutor() {
-    GovernanceRules.assertEveryCapabilityHasAnExecutor(REPOSITORY_ROOT);
+    assertDoesNotThrow(
+        () -> {
+          GovernanceRules.assertEveryCapabilityHasAnExecutor(REPOSITORY_ROOT);
+        });
   }
 
   @Test
   @DisplayName("[EXEC-002] every capability's routing_key is drained by a declared worker")
   void everyCapabilityIsDrained() {
-    GovernanceRules.assertEveryCapabilityIsDrained(REPOSITORY_ROOT);
+    assertDoesNotThrow(
+        () -> {
+          GovernanceRules.assertEveryCapabilityIsDrained(REPOSITORY_ROOT);
+        });
   }
 
   @Test
   @DisplayName(
       "[CFG-001] every type the configuration binder builds has a constructor it can choose")
   void configurationBindsUnambiguously() {
-    ConfigBindingRules.assertConfigurationBindsUnambiguously();
-    ConfigBindingRules.assertInjectableComponentsHaveOneConstructor();
+    assertDoesNotThrow(
+        () -> {
+          ConfigBindingRules.assertConfigurationBindsUnambiguously();
+          ConfigBindingRules.assertInjectableComponentsHaveOneConstructor();
+        });
   }
 
   @Test
   @DisplayName("[ERR-113] No Environment injection in production beans")
   void noEnvironmentInjection() {
-    SourceFileScanner.assertNoEnvironmentInjection(Path.of("src", "main", "java"));
+    assertDoesNotThrow(
+        () -> {
+          SourceFileScanner.assertNoEnvironmentInjection(Path.of("src", "main", "java"));
+        });
   }
 
   /** [LOG-001] no logging call takes a prompt, a response body or a message text (ADR-064). */
   @Test
   void noLoggingCallTakesContent() {
-    LoggedContentRules.assertNoLoggingCallTakesContent();
+    assertDoesNotThrow(
+        () -> {
+          LoggedContentRules.assertNoLoggingCallTakesContent();
+        });
   }
 }

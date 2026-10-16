@@ -2,9 +2,7 @@ package com.krizaka.orazaka.automationservice.infrastructure.adapter.amqp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.lenient;
 
 import com.krizaka.messaging.dedup.MessageDedup;
 import com.krizaka.orazaka.automationservice.application.service.ConnectorDispatcher;
@@ -93,7 +91,7 @@ class AutomationJobListenerTest {
             telemetryCaptor.capture());
 
     // First telemetry = RUNNING
-    Map<String, Object> runningTelemetry = telemetryCaptor.getAllValues().get(0);
+    Map<String, Object> runningTelemetry = telemetryCaptor.getAllValues().getFirst();
     assertThat(runningTelemetry)
         .containsEntry(STATUS_KEY, "RUNNING")
         .containsEntry("jobId", "job-100");

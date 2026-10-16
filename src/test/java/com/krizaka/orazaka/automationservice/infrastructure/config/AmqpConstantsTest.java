@@ -2,6 +2,7 @@ package com.krizaka.orazaka.automationservice.infrastructure.config;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +35,6 @@ class AmqpConstantsTest {
   @DisplayName("AmqpConstants private constructor should prevent instantiation")
   void notInstantiable() throws Exception {
     var ctor = AmqpConstants.class.getDeclaredConstructor();
-    assertThat(java.lang.reflect.Modifier.isPrivate(ctor.getModifiers())).isTrue();
+    assertThat(Modifier.isPrivate(ctor.getModifiers())).isTrue();
   }
 }
