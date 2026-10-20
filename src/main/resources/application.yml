@@ -80,6 +80,11 @@ logging:
 
 # ── Orazaka — service-owned wiring ────────────────────────────────────────────
 orazaka:
+  assets:
+    encryption:
+      # The keyring the webhook secrets are sealed under (ADR-084). Declared here because the property's own
+      # @DefaultValue ("${user.home}/...") is not placeholder-resolved by the binder.
+      master-key-file: ${ASSETS_MASTER_KEY_FILE:${user.home}/.orazaka/master.key}
   automation-service:
     datasource:
       url: ${AUTOMATION_DB_URL:jdbc:postgresql://localhost:5432/orazaka_automation_db}
