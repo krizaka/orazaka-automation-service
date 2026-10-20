@@ -106,12 +106,18 @@ class AutomationSchemaIT {
   }
 
   @Test
-  @DisplayName("The limits are a versioned rule set: exactly one is active, and v1 is seeded")
+  @DisplayName(
+      "The limits are a versioned rule set: exactly one is active, the newest, and v1 stays seeded")
   void ruleSetIsData() {
     assertThat(
             jdbc.queryForObject(
-                "SELECT version FROM automation_settings WHERE active", Integer.class))
+                "SELECT count(*) FROM automation_settings WHERE active", Integer.class))
         .isEqualTo(1);
+    assertThat(
+            jdbc.queryForObject(
+                "SELECT version FROM automation_settings WHERE active", Integer.class))
+        .isEqualTo(
+            jdbc.queryForObject("SELECT max(version) FROM automation_settings", Integer.class));
     assertThat(
             jdbc.queryForObject(
                 "SELECT rules->>'approvalTtlHours' FROM automation_settings WHERE version = 1",
@@ -120,7 +126,7 @@ class AutomationSchemaIT {
     assertThatThrownBy(
             () ->
                 jdbc.update(
-                    "INSERT INTO automation_settings (version, rules, active) VALUES (2, '{}',"
+                    "INSERT INTO automation_settings (version, rules, active) VALUES (99, '{}',"
                         + " TRUE)"))
         .isInstanceOf(DataAccessException.class);
   }
