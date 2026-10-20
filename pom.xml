@@ -46,6 +46,13 @@
             <artifactId>krizaka-security</artifactId>
         </dependency>
 
+        <!-- Tier-2 SDK: the master keyring of the asset store (ADR-054). A webhook trigger's secret is sealed
+             under it (ADR-084 §1) — the mechanism of the platform, not a second one. -->
+        <dependency>
+            <groupId>com.krizaka.orazaka</groupId>
+            <artifactId>orazaka-assets</artifactId>
+        </dependency>
+
         <!-- Spring Boot Starter Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

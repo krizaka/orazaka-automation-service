@@ -90,7 +90,7 @@ public abstract class AutomationServiceIT {
                 .formatted(POSTGRES.getHost(), POSTGRES.getMappedPort(5432), DATABASE));
     registry.add("orazaka.automation-service.datasource.username", () -> ROLE);
     registry.add("orazaka.automation-service.datasource.password", () -> PASSWORD);
-    registry.add("orazaka.assets.encryption.master-key-file", () -> KEYRING.toString());
+    registry.add("orazaka.assets.encryption.master-key-file", KEYRING::toString);
     registry.add("krizaka.security.jwt.secret", () -> JWT_SECRET);
     // No broker, as in CI: the listeners do not start and a connection attempt fails fast and
     // quietly.

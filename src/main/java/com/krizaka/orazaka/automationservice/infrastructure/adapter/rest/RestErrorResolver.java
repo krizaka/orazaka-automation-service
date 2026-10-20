@@ -2,6 +2,8 @@ package com.krizaka.orazaka.automationservice.infrastructure.adapter.rest;
 
 import com.krizaka.orazaka.automationservice.domain.exception.AutomationNotFoundException;
 import com.krizaka.orazaka.automationservice.domain.exception.TooManyAutomationsException;
+import com.krizaka.orazaka.automationservice.domain.exception.TooManyTriggersException;
+import com.krizaka.orazaka.automationservice.domain.exception.TriggerNotFoundException;
 import java.net.URI;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -26,6 +28,16 @@ class RestErrorResolver {
   @ExceptionHandler(TooManyAutomationsException.class)
   ProblemDetail tooMany(TooManyAutomationsException e) {
     return problem(HttpStatus.CONFLICT, "too_many_automations", e.getMessage());
+  }
+
+  @ExceptionHandler(TriggerNotFoundException.class)
+  ProblemDetail triggerNotFound(TriggerNotFoundException e) {
+    return problem(HttpStatus.NOT_FOUND, "trigger_not_found", "No such trigger.");
+  }
+
+  @ExceptionHandler(TooManyTriggersException.class)
+  ProblemDetail tooManyTriggers(TooManyTriggersException e) {
+    return problem(HttpStatus.CONFLICT, "too_many_triggers", e.getMessage());
   }
 
   @ExceptionHandler(IllegalArgumentException.class)
