@@ -67,6 +67,26 @@ class AmqpConfigurationTest {
   }
 
   @Test
+  @DisplayName(
+      "The Studio run outcomes: succeeded and failed only, never run.started, dead-lettered")
+  void studioRunOutcomeBindings() {
+    Queue queue = config.studioRunsQueue();
+    Binding ok = config.studioRunSucceededBinding(queue, config.eventsExchange());
+    Binding ko = config.studioRunFailedBinding(queue, config.eventsExchange());
+
+    assertThat(queue.isDurable()).isTrue();
+    assertThat(queue.getArguments())
+        .containsEntry("x-dead-letter-exchange", AmqpConstants.DLX_EXCHANGE)
+        .containsEntry("x-dead-letter-routing-key", AmqpConstants.STUDIO_RUNS_QUEUE);
+    assertThat(ok.getExchange()).isEqualTo(AmqpConstants.EVENTS_EXCHANGE);
+    assertThat(ok.getRoutingKey()).isEqualTo("evt.studio.run.succeeded");
+    assertThat(ko.getRoutingKey()).isEqualTo("evt.studio.run.failed");
+    Binding dlq = config.studioRunsDlqBinding(config.studioRunsDlq(), config.deadLetterExchange());
+    assertThat(dlq.getDestination()).isEqualTo(AmqpConstants.STUDIO_RUNS_DLQ);
+    assertThat(dlq.getRoutingKey()).isEqualTo(AmqpConstants.STUDIO_RUNS_QUEUE);
+  }
+
+  @Test
   @DisplayName("Should configure JacksonJsonMessageConverter for JSON serialization")
   void jsonMessageConverterConfigured() {
     MessageConverter converter = config.jsonMessageConverter();

@@ -6,6 +6,8 @@ import com.krizaka.orazaka.automationservice.domain.exception.AutomationNotFound
 import com.krizaka.orazaka.automationservice.domain.exception.TooManyAutomationsException;
 import com.krizaka.orazaka.automationservice.domain.exception.TooManyTriggersException;
 import com.krizaka.orazaka.automationservice.domain.exception.TriggerNotFoundException;
+import com.krizaka.orazaka.automationservice.domain.exception.WebhookRejectedException;
+import com.krizaka.orazaka.automationservice.domain.model.Rejection;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,5 +52,44 @@ class RestErrorResolverTest {
     ProblemDetail many = resolver.tooManyTriggers(new TooManyTriggersException(5));
     assertThat(many.getStatus()).isEqualTo(409);
     assertThat(many.getProperties()).containsEntry("code", "too_many_triggers");
+  }
+
+  @Test
+  @DisplayName(
+      "each refusal of a webhook call has its status, its code and, when it is a matter of time, Retry-After")
+  void webhookRefusals() {
+    UUID first = UUID.randomUUID();
+    var tooLarge =
+        resolver.webhookRejected(
+            new WebhookRejectedException(Rejection.PAYLOAD_TOO_LARGE, 0, null));
+    assertThat(tooLarge.getStatusCode().value()).isEqualTo(413);
+    var unauthenticated =
+        resolver.webhookRejected(new WebhookRejectedException(Rejection.UNAUTHENTICATED, 0, null));
+    assertThat(unauthenticated.getStatusCode().value()).isEqualTo(401);
+    assertThat(unauthenticated.getBody().getProperties())
+        .containsEntry("code", "invalid_webhook_request");
+    assertThat(unauthenticated.getHeaders().getFirst("Retry-After")).isNull();
+    var replay =
+        resolver.webhookRejected(new WebhookRejectedException(Rejection.REPLAYED, 0, first));
+    assertThat(replay.getStatusCode().value()).isEqualTo(409);
+    assertThat(replay.getBody().getProperties()).containsEntry("runId", first.toString());
+    var limited =
+        resolver.webhookRejected(new WebhookRejectedException(Rejection.RATE_LIMITED, 7, null));
+    assertThat(limited.getStatusCode().value()).isEqualTo(429);
+    assertThat(limited.getHeaders().getFirst("Retry-After")).isEqualTo("7");
+    var budget =
+        resolver.webhookRejected(new WebhookRejectedException(Rejection.DAILY_BUDGET, 3600, null));
+    assertThat(budget.getStatusCode().value()).isEqualTo(429);
+    assertThat(budget.getBody().getProperties()).containsEntry("code", "daily_budget_reached");
+  }
+
+  @Test
+  @DisplayName("the unauthenticated answer is the same words whatever the cause")
+  void unauthenticatedIsUniform() {
+    var one =
+        resolver.webhookRejected(new WebhookRejectedException(Rejection.UNAUTHENTICATED, 0, null));
+    var two =
+        resolver.webhookRejected(new WebhookRejectedException(Rejection.UNAUTHENTICATED, 0, null));
+    assertThat(one.getBody().getDetail()).isEqualTo(two.getBody().getDetail());
   }
 }

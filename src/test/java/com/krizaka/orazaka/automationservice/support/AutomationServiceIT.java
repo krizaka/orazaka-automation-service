@@ -25,6 +25,9 @@ public abstract class AutomationServiceIT {
   /** The shared HS256 secret the tests sign session tokens with. */
   public static final String JWT_SECRET = "automation-it-identity-jwt-secret-256bit!!";
 
+  /** The Studio service, as far as the automation service can tell. */
+  public static final StudioStub STUDIO = new StudioStub();
+
   private static final String ROLE = "orazaka_automation";
   private static final String PASSWORD = "orazaka_automation_pass";
   private static final String DATABASE = "orazaka_automation_db";
@@ -90,6 +93,11 @@ public abstract class AutomationServiceIT {
                 .formatted(POSTGRES.getHost(), POSTGRES.getMappedPort(5432), DATABASE));
     registry.add("orazaka.automation-service.datasource.username", () -> ROLE);
     registry.add("orazaka.automation-service.datasource.password", () -> PASSWORD);
+    // One connection, as on dev: a transaction held across a remote call would deadlock these
+    // tests.
+    registry.add("orazaka.automation-service.datasource.max-pool-size", () -> "1");
+    registry.add("orazaka.automation-service.studio.base-url", STUDIO::baseUrl);
+    registry.add("orazaka.automation-service.scheduler.enabled", () -> "false");
     registry.add("orazaka.assets.encryption.master-key-file", KEYRING::toString);
     registry.add("krizaka.security.jwt.secret", () -> JWT_SECRET);
     // No broker, as in CI: the listeners do not start and a connection attempt fails fast and

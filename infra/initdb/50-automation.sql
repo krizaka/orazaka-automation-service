@@ -289,3 +289,41 @@ CREATE INDEX IF NOT EXISTS idx_automation_trigger_due ON automation_trigger (nex
 -- The limits of triggers, as rows of the active rule set (v2). A value already set is kept.
 UPDATE automation_settings SET rules = '{"maxTriggersPerAutomation": 5, "webhookSecretGraceHours": 24}'::jsonb || rules
  WHERE version = 2;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SIGNED WEBHOOK → RUN (ADR-084 §2, §3). `webhook_delivery` is the replay guard: every webhook-id accepted for a trigger,
+-- its PRIMARY KEY (trigger_id, webhook_id) is what makes a reused id fail, whoever the instance. The run row gains who
+-- started it, the Studio run it is, why it failed, and the webhook body it was started with (a JSON object, capped).
+-- Idempotent: safe to re-apply.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS webhook_delivery (
+    trigger_id  UUID         NOT NULL REFERENCES automation_trigger(id) ON DELETE CASCADE,
+    webhook_id  VARCHAR(128) NOT NULL,
+    run_id      UUID         NOT NULL,
+    received_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    PRIMARY KEY (trigger_id, webhook_id)
+);
+CREATE INDEX IF NOT EXISTS idx_webhook_delivery_received ON webhook_delivery (received_at);
+
+ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS trigger_id    UUID REFERENCES automation_trigger(id) ON DELETE SET NULL;
+ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS trigger_kind  automation_trigger_kind;
+ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS studio_run_id UUID;
+ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS error_code    VARCHAR(60);
+ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS error_message VARCHAR(500);
+ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS webhook_id    VARCHAR(128);
+ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS payload       JSONB;
+ALTER TABLE automation_run ADD COLUMN IF NOT EXISTS payload_bytes INT;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_automation_run_studio ON automation_run (studio_run_id) WHERE studio_run_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_automation_run_status ON automation_run (status, started_at) WHERE status IN ('QUEUED', 'RUNNING');
+
+-- The limits of the webhook and of the run sweep, as rows of the active rule set (v2). A value already set is kept.
+UPDATE automation_settings SET rules = '{
+  "webhookBodyMaxBytes": 65536,
+  "webhookToleranceSeconds": 300,
+  "webhookGlobalPerMinute": 3000,
+  "webhookPreverifyPerMinute": 600,
+  "webhookRunsPerMinute": 60,
+  "webhookReplayRetentionHours": 24,
+  "runQueuedStaleSeconds": 30,
+  "runReconcileAfterSeconds": 120
+}'::jsonb || rules WHERE version = 2;
