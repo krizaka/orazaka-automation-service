@@ -327,3 +327,6 @@ UPDATE automation_settings SET rules = '{
   "runQueuedStaleSeconds": 30,
   "runReconcileAfterSeconds": 120
 }'::jsonb || rules WHERE version = 2;
+
+-- The late tolerance of a schedule slot (seconds before the catch-up policy decides), a row of the active rule set (v2).
+UPDATE automation_settings SET rules = '{"scheduleLateToleranceSeconds": 120}'::jsonb || rules WHERE version = 2;

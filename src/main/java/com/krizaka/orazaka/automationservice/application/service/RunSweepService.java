@@ -15,15 +15,17 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 /**
- * The periodic housekeeping of automations: start the runs that were recorded but not started, read
- * the Studio runs whose end event never came, and forget what is past its retention. One pass is
- * cheap and safe to repeat; each statement is its own short transaction (ADR-084 §6).
+ * The periodic housekeeping of automations: fire the schedule slots that have come, start the runs
+ * that were recorded but not started, read the Studio runs whose end event never came, and forget
+ * what is past its retention. One pass is cheap and safe to repeat; each statement is its own short
+ * transaction (ADR-084 §6).
  */
 @Service
 public class RunSweepService {
 
   private static final int BATCH = 20;
 
+  private final ScheduleClaimService schedules;
   private final RunDispatchService dispatch;
   private final RunRepository runs;
   private final WebhookCredentialStore credentials;
@@ -33,6 +35,7 @@ public class RunSweepService {
   private final Clock clock;
 
   public RunSweepService(
+      ScheduleClaimService schedules,
       RunDispatchService dispatch,
       RunRepository runs,
       WebhookCredentialStore credentials,
@@ -40,6 +43,7 @@ public class RunSweepService {
       StudioRunStarter studio,
       AutomationSettingsService settings,
       Clock clock) {
+    this.schedules = Objects.requireNonNull(schedules, "ScheduleClaimService cannot be null");
     this.dispatch = Objects.requireNonNull(dispatch, "RunDispatchService cannot be null");
     this.runs = Objects.requireNonNull(runs, "RunRepository cannot be null");
     this.credentials = Objects.requireNonNull(credentials, "WebhookCredentialStore cannot be null");
@@ -52,6 +56,8 @@ public class RunSweepService {
   /** Runs one pass. */
   public void sweep() {
     Instant now = clock.instant();
+    schedules.claimDue().forEach(dispatch::dispatch);
+
     Instant queuedBefore =
         now.minus(Duration.ofSeconds(settings.value(SettingKey.RUN_QUEUED_STALE_SECONDS)));
     for (UUID runId : runs.staleQueued(queuedBefore, BATCH)) {
