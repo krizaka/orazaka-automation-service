@@ -25,6 +25,7 @@ class RunSweepServiceTest {
 
   private static final Instant NOW = Instant.parse("2026-10-20T12:00:00Z");
 
+  private final ScheduleClaimService schedules = mock(ScheduleClaimService.class);
   private final RunDispatchService dispatch = mock(RunDispatchService.class);
   private final RunRepository runs = mock(RunRepository.class);
   private final WebhookCredentialStore triggers = mock(WebhookCredentialStore.class);
@@ -37,20 +38,24 @@ class RunSweepServiceTest {
   void setUp() {
     sweep =
         new RunSweepService(
-            dispatch, runs, triggers, ledger, studio, settings, new FixedClock(NOW));
+            schedules, dispatch, runs, triggers, ledger, studio, settings, new FixedClock(NOW));
     for (SettingKey key : SettingKey.values()) {
       when(settings.value(key)).thenReturn(key.defaultValue());
     }
   }
 
   @Test
-  @DisplayName("a pass starts the stale queued runs and forgets what is past retention")
+  @DisplayName(
+      "a pass fires the due slots, starts the stale queued runs and forgets what is past retention")
   void pass() {
+    UUID fromSchedule = UUID.randomUUID();
     UUID stale = UUID.randomUUID();
+    when(schedules.claimDue()).thenReturn(List.of(fromSchedule));
     when(runs.staleQueued(any(), anyInt())).thenReturn(List.of(stale));
 
     sweep.sweep();
 
+    verify(dispatch).dispatch(fromSchedule);
     verify(dispatch).dispatch(stale);
     verify(runs).staleQueued(NOW.minus(Duration.ofSeconds(30)), 20);
     verify(triggers).clearExpiredPreviousSecrets(NOW);
