@@ -4,9 +4,12 @@ import com.krizaka.orazaka.automationservice.domain.exception.AutomationNotFound
 import com.krizaka.orazaka.automationservice.domain.exception.TooManyAutomationsException;
 import com.krizaka.orazaka.automationservice.domain.exception.TooManyTriggersException;
 import com.krizaka.orazaka.automationservice.domain.exception.TriggerNotFoundException;
+import com.krizaka.orazaka.automationservice.domain.exception.WebhookRejectedException;
 import java.net.URI;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -38,6 +41,31 @@ class RestErrorResolver {
   @ExceptionHandler(TooManyTriggersException.class)
   ProblemDetail tooManyTriggers(TooManyTriggersException e) {
     return problem(HttpStatus.CONFLICT, "too_many_triggers", e.getMessage());
+  }
+
+  /**
+   * An inbound webhook call that was refused. Every unauthenticated cause is the same answer, word
+   * for word: nothing here says whether the trigger exists.
+   */
+  @ExceptionHandler(WebhookRejectedException.class)
+  ResponseEntity<ProblemDetail> webhookRejected(WebhookRejectedException e) {
+    HttpStatus status =
+        switch (e.rejection()) {
+          case PAYLOAD_TOO_LARGE -> HttpStatus.PAYLOAD_TOO_LARGE;
+          case RATE_LIMITED, DAILY_BUDGET -> HttpStatus.TOO_MANY_REQUESTS;
+          case UNAUTHENTICATED -> HttpStatus.UNAUTHORIZED;
+          case REPLAYED -> HttpStatus.CONFLICT;
+        };
+    ProblemDetail problem =
+        problem(status, e.rejection().code(), "The webhook call was not accepted.");
+    if (e.existingRunId() != null) {
+      problem.setProperty("runId", e.existingRunId().toString());
+    }
+    ResponseEntity.BodyBuilder response = ResponseEntity.status(status);
+    if (e.retryAfterSeconds() > 0) {
+      response.header(HttpHeaders.RETRY_AFTER, Long.toString(e.retryAfterSeconds()));
+    }
+    return response.body(problem);
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

@@ -68,6 +68,44 @@ public class AmqpConfiguration {
         .with(AmqpConstants.AUTOMATION_QUEUE);
   }
 
+  // ── Studio run outcomes — evt.studio.run.{succeeded,failed} ───────────────
+
+  @Bean
+  public Queue studioRunsQueue() {
+    return new Queue(
+        AmqpConstants.STUDIO_RUNS_QUEUE,
+        true,
+        false,
+        false,
+        dlqArguments(AmqpConstants.STUDIO_RUNS_QUEUE));
+  }
+
+  @Bean
+  public Binding studioRunSucceededBinding(Queue studioRunsQueue, TopicExchange eventsExchange) {
+    return BindingBuilder.bind(studioRunsQueue)
+        .to(eventsExchange)
+        .with(AmqpConstants.STUDIO_RUN_SUCCEEDED);
+  }
+
+  @Bean
+  public Binding studioRunFailedBinding(Queue studioRunsQueue, TopicExchange eventsExchange) {
+    return BindingBuilder.bind(studioRunsQueue)
+        .to(eventsExchange)
+        .with(AmqpConstants.STUDIO_RUN_FAILED);
+  }
+
+  @Bean
+  public Queue studioRunsDlq() {
+    return new Queue(AmqpConstants.STUDIO_RUNS_DLQ, true, false, false);
+  }
+
+  @Bean
+  public Binding studioRunsDlqBinding(Queue studioRunsDlq, DirectExchange deadLetterExchange) {
+    return BindingBuilder.bind(studioRunsDlq)
+        .to(deadLetterExchange)
+        .with(AmqpConstants.STUDIO_RUNS_QUEUE);
+  }
+
   @Bean
   public MessageConverter jsonMessageConverter() {
     return new JacksonJsonMessageConverter();

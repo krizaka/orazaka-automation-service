@@ -24,17 +24,6 @@ spring:
   flyway:
     enabled: false
 
-  quartz:
-    job-store-type: jdbc
-    jdbc:
-      initialize-schema: always
-    properties:
-      org.quartz.scheduler.instanceName: OrazakaAutomationScheduler
-      org.quartz.scheduler.instanceId: AUTO
-      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
-      org.quartz.jobStore.tablePrefix: QRTZ_
-      org.quartz.jobStore.isClustered: false
-      org.quartz.threadPool.threadCount: 5
 
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
@@ -59,7 +48,7 @@ spring:
 
 # Standalone Spring Boot module exposed health check at /actuator/health (port 8082)
 server:
-  port: ${AUTOMATION_PORT:8082}
+  port: ${AUTOMATION_PORT:8091}
 
 # Distributed tracing (Phase 0): OTLP/HTTP export to the local Jaeger container.
 management:
@@ -88,7 +77,6 @@ logging:
   level:
     com.krizaka.orazaka.automation: DEBUG
     org.springframework.amqp: INFO
-    org.quartz: INFO
 
 # ── Orazaka — service-owned wiring ────────────────────────────────────────────
 orazaka:
@@ -97,6 +85,15 @@ orazaka:
       url: ${AUTOMATION_DB_URL:jdbc:postgresql://localhost:5432/orazaka_automation_db}
       username: ${AUTOMATION_DB_USERNAME:orazaka_automation}
       password: ${AUTOMATION_DB_PASSWORD}
+      # One connection on dev (docs/DEV_DATABASE.md: the cluster has 22): no transaction is held across a remote call.
+      max-pool-size: ${AUTOMATION_DB_MAX_POOL_SIZE:5}
+    studio:
+      # Where Studio runs are started, as the automation's owner (ADR-084).
+      base-url: ${STUDIO_INTERNAL_URL:http://localhost:8096}
+    scheduler:
+      # One sweep every interval: schedule slots, queued runs, lost events, retention. Wiring only.
+      enabled: true
+      interval: 15s
     public:
       # The address a sender is shown for a webhook trigger: the edge as the Internet reaches it (ADR-084).
       base-url: ${APP_PUBLIC_EDGE_URL:http://localhost:8088}
