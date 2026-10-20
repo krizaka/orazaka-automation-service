@@ -28,6 +28,8 @@ public enum SettingKey {
   WEBHOOK_SECRET_GRACE_HOURS("webhookSecretGraceHours", 24, 0, 168),
   /** How long a webhook-id is remembered. */
   WEBHOOK_REPLAY_RETENTION_HOURS("webhookReplayRetentionHours", 24, 1, 720),
+  /** How late a schedule slot may be fired before the catch-up policy decides. */
+  SCHEDULE_LATE_TOLERANCE_SECONDS("scheduleLateToleranceSeconds", 120, 10, 3_600),
   /** How long a run may stay queued before the sweep starts it. */
   RUN_QUEUED_STALE_SECONDS("runQueuedStaleSeconds", 30, 5, 600),
   /** How long a running run may go without an event before its Studio run is read. */
