@@ -3,6 +3,7 @@ package com.krizaka.orazaka.automationservice.infrastructure.adapter.rest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.krizaka.orazaka.automationservice.domain.exception.AutomationNotFoundException;
+import com.krizaka.orazaka.automationservice.domain.exception.RunNotFoundException;
 import com.krizaka.orazaka.automationservice.domain.exception.TooManyAutomationsException;
 import com.krizaka.orazaka.automationservice.domain.exception.TooManyTriggersException;
 import com.krizaka.orazaka.automationservice.domain.exception.TriggerNotFoundException;
@@ -91,5 +92,13 @@ class RestErrorResolverTest {
     var two =
         resolver.webhookRejected(new WebhookRejectedException(Rejection.UNAUTHENTICATED, 0, null));
     assertThat(one.getBody().getDetail()).isEqualTo(two.getBody().getDetail());
+  }
+
+  @Test
+  @DisplayName("a missing run is a 404")
+  void runNotFound() {
+    ProblemDetail problem = resolver.runNotFound(new RunNotFoundException(UUID.randomUUID()));
+    assertThat(problem.getStatus()).isEqualTo(404);
+    assertThat(problem.getProperties()).containsEntry("code", "run_not_found");
   }
 }
