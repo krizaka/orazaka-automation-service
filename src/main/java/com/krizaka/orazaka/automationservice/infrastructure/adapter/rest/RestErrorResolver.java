@@ -1,6 +1,7 @@
 package com.krizaka.orazaka.automationservice.infrastructure.adapter.rest;
 
 import com.krizaka.orazaka.automationservice.domain.exception.AutomationNotFoundException;
+import com.krizaka.orazaka.automationservice.domain.exception.RunNotFoundException;
 import com.krizaka.orazaka.automationservice.domain.exception.TooManyAutomationsException;
 import com.krizaka.orazaka.automationservice.domain.exception.TooManyTriggersException;
 import com.krizaka.orazaka.automationservice.domain.exception.TriggerNotFoundException;
@@ -66,6 +67,11 @@ class RestErrorResolver {
       response.header(HttpHeaders.RETRY_AFTER, Long.toString(e.retryAfterSeconds()));
     }
     return response.body(problem);
+  }
+
+  @ExceptionHandler(RunNotFoundException.class)
+  ProblemDetail runNotFound(RunNotFoundException e) {
+    return problem(HttpStatus.NOT_FOUND, "run_not_found", "No such run.");
   }
 
   @ExceptionHandler(IllegalArgumentException.class)
