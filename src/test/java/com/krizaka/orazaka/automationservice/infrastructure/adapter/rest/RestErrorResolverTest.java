@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.krizaka.orazaka.automationservice.domain.exception.AutomationNotFoundException;
 import com.krizaka.orazaka.automationservice.domain.exception.TooManyAutomationsException;
+import com.krizaka.orazaka.automationservice.domain.exception.TooManyTriggersException;
+import com.krizaka.orazaka.automationservice.domain.exception.TriggerNotFoundException;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,5 +38,17 @@ class RestErrorResolverTest {
     assertThat(problem.getStatus()).isEqualTo(400);
     assertThat(problem.getDetail()).isEqualTo("bad");
     assertThat(problem.getProperties()).containsEntry("code", "invalid_request");
+  }
+
+  @Test
+  @DisplayName("a missing trigger is a 404, and too many triggers a 409 with their own codes")
+  void triggers() {
+    ProblemDetail missing =
+        resolver.triggerNotFound(new TriggerNotFoundException(UUID.randomUUID()));
+    assertThat(missing.getStatus()).isEqualTo(404);
+    assertThat(missing.getProperties()).containsEntry("code", "trigger_not_found");
+    ProblemDetail many = resolver.tooManyTriggers(new TooManyTriggersException(5));
+    assertThat(many.getStatus()).isEqualTo(409);
+    assertThat(many.getProperties()).containsEntry("code", "too_many_triggers");
   }
 }

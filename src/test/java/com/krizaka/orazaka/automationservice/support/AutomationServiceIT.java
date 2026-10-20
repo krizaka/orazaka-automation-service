@@ -2,7 +2,12 @@ package com.krizaka.orazaka.automationservice.support;
 
 import com.krizaka.orazaka.test.architecture.SqlBoundaryRules;
 import com.krizaka.test.container.ServiceRoles;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.security.SecureRandom;
+import java.util.Base64;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -11,8 +16,9 @@ import org.testcontainers.utility.MountableFile;
 
 /**
  * A real PostgreSQL with this context's own bootstrap ({@code 50-automation.sql}, run as the
- * database's superuser exactly as {@code orazaka start} does) and the service pointed at it under
- * its own role. One container per JVM; nothing is mocked below the HTTP port.
+ * database's superuser exactly as {@code orazaka start} does), a real master keyring file, and the
+ * service pointed at both under its own role. One container per JVM; nothing is mocked below the
+ * HTTP port.
  */
 public abstract class AutomationServiceIT {
 
@@ -22,6 +28,7 @@ public abstract class AutomationServiceIT {
   private static final String ROLE = "orazaka_automation";
   private static final String PASSWORD = "orazaka_automation_pass";
   private static final String DATABASE = "orazaka_automation_db";
+  private static final Path KEYRING = keyring();
 
   @SuppressWarnings("resource")
   private static final PostgreSQLContainer<?> POSTGRES =
@@ -45,6 +52,31 @@ public abstract class AutomationServiceIT {
   }
 
   /**
+   * A real master keyring file (mode 0600), as the asset store reads it: triggers seal their
+   * secrets under it.
+   */
+  private static Path keyring() {
+    try {
+      byte[] key = new byte[32];
+      new SecureRandom().nextBytes(key);
+      Path file =
+          Files.createTempFile(
+              "automation-it-master",
+              ".key",
+              PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+      Files.writeString(
+          file,
+          "# orazaka master keyring v1\nactive = k1\nk1 = "
+              + Base64.getEncoder().encodeToString(key)
+              + "\n");
+      file.toFile().deleteOnExit();
+      return file;
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  /**
    * Points the service at the container and keeps the broker out of the picture.
    *
    * @param registry the dynamic properties
@@ -58,6 +90,7 @@ public abstract class AutomationServiceIT {
                 .formatted(POSTGRES.getHost(), POSTGRES.getMappedPort(5432), DATABASE));
     registry.add("orazaka.automation-service.datasource.username", () -> ROLE);
     registry.add("orazaka.automation-service.datasource.password", () -> PASSWORD);
+    registry.add("orazaka.assets.encryption.master-key-file", KEYRING::toString);
     registry.add("krizaka.security.jwt.secret", () -> JWT_SECRET);
     // No broker, as in CI: the listeners do not start and a connection attempt fails fast and
     // quietly.

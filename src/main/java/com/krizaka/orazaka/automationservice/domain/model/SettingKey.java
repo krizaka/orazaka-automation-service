@@ -9,7 +9,11 @@ public enum SettingKey {
   /** How many automations one owner may hold. */
   MAX_AUTOMATIONS_PER_OWNER("maxAutomationsPerUser", 20, 1, 200),
   /** The largest serialized size of an automation's fixed inputs. */
-  MAX_INPUTS_BYTES("maxInputsBytes", 16_384, 256, 65_536);
+  MAX_INPUTS_BYTES("maxInputsBytes", 16_384, 256, 65_536),
+  /** How many triggers one automation may hold. */
+  MAX_TRIGGERS_PER_AUTOMATION("maxTriggersPerAutomation", 5, 1, 20),
+  /** How long the previous secret keeps verifying after a rotation. */
+  WEBHOOK_SECRET_GRACE_HOURS("webhookSecretGraceHours", 24, 0, 168);
 
   private final String key;
   private final int defaultValue;
@@ -26,14 +30,14 @@ public enum SettingKey {
   /**
    * The key in the rule set document.
    *
-   * @return the key in the rule set document
+   * @return the key stored in {@code automation_settings.rules}
    */
   public String key() {
     return key;
   }
 
   /**
-   * The value used when the row is absent or unreadable.
+   * The value used when the key is absent or unreadable.
    *
    * @return the default
    */

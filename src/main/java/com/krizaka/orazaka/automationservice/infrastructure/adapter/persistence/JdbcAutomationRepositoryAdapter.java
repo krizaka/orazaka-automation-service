@@ -90,8 +90,8 @@ class JdbcAutomationRepositoryAdapter implements AutomationRepository {
   public Optional<Automation> update(String ownerId, UUID id, AutomationChange change) {
     return jdbc
         .query(
-            "UPDATE automation SET name = COALESCE(?, name),"
-                + " inputs = COALESCE(?::jsonb, inputs), enabled = COALESCE(?, enabled),"
+            "UPDATE automation SET name = COALESCE(?::text, name),"
+                + " inputs = COALESCE(?::jsonb, inputs), enabled = COALESCE(?::boolean, enabled),"
                 + " updated_at = now() WHERE user_id = ? AND id = ? AND"
                 + CLOUD
                 + " RETURNING "

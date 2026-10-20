@@ -146,6 +146,26 @@ class AutomationApiIT extends AutomationServiceIT {
   }
 
   @Test
+  @DisplayName("a change of the name alone leaves the state and the inputs as they were")
+  void renameOnly() {
+    String token = TestTokens.session("rename-owner", "ROLE_USER");
+    String id = created("rename-owner", BODY).get("id").asString();
+    JsonNode renamed =
+        json.readTree(
+            call(HttpMethod.PATCH, "/api/v1/automations/" + id, token, "{\"name\":\"Only a name\"}")
+                .getBody());
+    assertThat(renamed.get("name").asString()).isEqualTo("Only a name");
+    assertThat(renamed.get("enabled").asBoolean()).isTrue();
+    assertThat(renamed.get("inputs").get("jurisdiction").asString()).isEqualTo("QC");
+    JsonNode paused =
+        json.readTree(
+            call(HttpMethod.PATCH, "/api/v1/automations/" + id, token, "{\"enabled\":false}")
+                .getBody());
+    assertThat(paused.get("name").asString()).as("untouched").isEqualTo("Only a name");
+    assertThat(paused.get("enabled").asBoolean()).isFalse();
+  }
+
+  @Test
   @DisplayName("someone else's automation is a 404 on every verb, never a 403")
   void tenancyIsAlwaysScoped() {
     String id = created(ALICE, BODY).get("id").asString();
