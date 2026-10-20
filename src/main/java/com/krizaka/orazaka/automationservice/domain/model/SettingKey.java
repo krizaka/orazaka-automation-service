@@ -12,8 +12,26 @@ public enum SettingKey {
   MAX_INPUTS_BYTES("maxInputsBytes", 16_384, 256, 65_536),
   /** How many triggers one automation may hold. */
   MAX_TRIGGERS_PER_AUTOMATION("maxTriggersPerAutomation", 5, 1, 20),
+  /** How many runs one automation may start in a UTC day. */
+  MAX_RUNS_PER_DAY("maxRunsPerDay", 20, 1, 1_000),
+  /** The largest body a webhook call may carry. */
+  WEBHOOK_BODY_MAX_BYTES("webhookBodyMaxBytes", 65_536, 1_024, 1_048_576),
+  /** How far a webhook timestamp may be from now, either way. */
+  WEBHOOK_TOLERANCE_SECONDS("webhookToleranceSeconds", 300, 30, 900),
+  /** Calls per minute to webhooks, all triggers together, before anything is looked up. */
+  WEBHOOK_GLOBAL_PER_MINUTE("webhookGlobalPerMinute", 3_000, 60, 60_000),
+  /** Calls per minute to one webhook trigger, before its signature is checked. */
+  WEBHOOK_PREVERIFY_PER_MINUTE("webhookPreverifyPerMinute", 600, 10, 6_000),
+  /** Verified calls per minute to one webhook trigger. */
+  WEBHOOK_RUNS_PER_MINUTE("webhookRunsPerMinute", 60, 1, 600),
   /** How long the previous secret keeps verifying after a rotation. */
-  WEBHOOK_SECRET_GRACE_HOURS("webhookSecretGraceHours", 24, 0, 168);
+  WEBHOOK_SECRET_GRACE_HOURS("webhookSecretGraceHours", 24, 0, 168),
+  /** How long a webhook-id is remembered. */
+  WEBHOOK_REPLAY_RETENTION_HOURS("webhookReplayRetentionHours", 24, 1, 720),
+  /** How long a run may stay queued before the sweep starts it. */
+  RUN_QUEUED_STALE_SECONDS("runQueuedStaleSeconds", 30, 5, 600),
+  /** How long a running run may go without an event before its Studio run is read. */
+  RUN_RECONCILE_AFTER_SECONDS("runReconcileAfterSeconds", 120, 30, 3_600);
 
   private final String key;
   private final int defaultValue;

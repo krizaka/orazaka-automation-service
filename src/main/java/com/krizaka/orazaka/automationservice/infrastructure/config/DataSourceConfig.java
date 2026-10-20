@@ -23,8 +23,8 @@ class DataSourceConfig {
     dataSource.setUsername(properties.username());
     dataSource.setPassword(properties.password());
     dataSource.setDriverClassName("org.postgresql.Driver");
-    dataSource.setMaximumPoolSize(5);
-    dataSource.setMinimumIdle(1);
+    dataSource.setMaximumPoolSize(properties.maxPoolSize());
+    dataSource.setMinimumIdle(Math.min(1, properties.maxPoolSize()));
     return dataSource;
   }
 }
