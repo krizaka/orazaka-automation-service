@@ -40,10 +40,26 @@
             <artifactId>krizaka-billing-client</artifactId>
         </dependency>
 
+        <!-- Krizaka platform kit: the session-JWT security baseline (ADR-035, ADR-073). -->
+        <dependency>
+            <groupId>com.krizaka</groupId>
+            <artifactId>krizaka-security</artifactId>
+        </dependency>
+
         <!-- Spring Boot Starter Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Security: the API is session-JWT authenticated and scoped by the caller's id. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
 
         <!-- Spring Boot Actuator -->
@@ -107,6 +123,11 @@
         <dependency>
             <groupId>org.springframework.amqp</groupId>
             <artifactId>spring-rabbit-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

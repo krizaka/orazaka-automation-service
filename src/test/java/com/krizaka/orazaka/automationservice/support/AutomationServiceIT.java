@@ -59,7 +59,11 @@ public abstract class AutomationServiceIT {
     registry.add("orazaka.automation-service.datasource.username", () -> ROLE);
     registry.add("orazaka.automation-service.datasource.password", () -> PASSWORD);
     registry.add("krizaka.security.jwt.secret", () -> JWT_SECRET);
+    // No broker, as in CI: the listeners do not start and a connection attempt fails fast and
+    // quietly.
     registry.add("spring.rabbitmq.listener.simple.auto-startup", () -> "false");
+    registry.add("spring.rabbitmq.host", () -> "127.0.0.1");
+    registry.add("spring.rabbitmq.port", () -> "1");
     registry.add("management.tracing.sampling.probability", () -> "0.0");
   }
 }

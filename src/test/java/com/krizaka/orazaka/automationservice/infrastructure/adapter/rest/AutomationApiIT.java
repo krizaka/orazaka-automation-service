@@ -59,10 +59,12 @@ class AutomationApiIT extends AutomationServiceIT {
   }
 
   @Test
-  @DisplayName("the service starts with its security chain, and health answers without a token")
+  @DisplayName("the service starts with its security chain, and health is answered without a token")
   void healthIsOpen() {
+    // Open means « not asked for a token »: whether it is UP depends on the broker, which CI does
+    // not have.
     assertThat(call(HttpMethod.GET, "/actuator/health", null, null).getStatusCode().value())
-        .isEqualTo(200);
+        .isIn(200, 503);
   }
 
   @Test

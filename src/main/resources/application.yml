@@ -100,6 +100,12 @@ orazaka:
 
 # ── Krizaka platform kit ──────────────────────────────────────────────────────
 krizaka:
+  security:
+    jwt:
+      # The shared HS256 secret the identity service signs session and service tokens with.
+      # krizaka-security validates every request locally with it and refuses to start when it is
+      # shorter than 32 characters (256 bits).
+      secret: ${IDENTITY_JWT_SECRET:orazaka-local-dev-identity-jwt-secret-256bit!}
   billing:
     # Bootstrap switch only — the enforcement mode is a row owned by the billing
     # service. Default OFF wires the no-op adapter, so this service behaves
