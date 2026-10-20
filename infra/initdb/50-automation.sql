@@ -263,3 +263,29 @@ DROP TRIGGER IF EXISTS trg_audit_event_chain ON audit_event;
 CREATE TRIGGER trg_audit_event_chain BEFORE INSERT ON audit_event FOR EACH ROW EXECUTE FUNCTION audit_event_chain();
 DROP TRIGGER IF EXISTS trg_audit_event_immutable ON audit_event;
 CREATE TRIGGER trg_audit_event_immutable BEFORE UPDATE OR DELETE ON audit_event FOR EACH ROW EXECUTE FUNCTION audit_event_immutable();
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- TRIGGERS (ADR-084; orazaka#195, #196). A webhook trigger's secret is stored SEALED under the master keyring
+-- (v1.<keyId>.<wrapped>.<nonce>.<ciphertext>), never in clear; `secret_hint` is its last four characters, and the previous
+-- secret keeps verifying until `previous_secret_until` (rotation without losing a call). A schedule trigger keeps its slot
+-- in `spec` ({"time":"08:00","zone":"America/Toronto","days":["MON",…]}) and its next slot in `next_fire_at`.
+-- Idempotent: safe to re-apply.
+-- ─────────────────────────────────────────────────────────────────────────────
+ALTER TABLE automation_trigger ADD COLUMN IF NOT EXISTS enabled                BOOLEAN     NOT NULL DEFAULT TRUE;
+ALTER TABLE automation_trigger ADD COLUMN IF NOT EXISTS secret_sealed          TEXT;
+ALTER TABLE automation_trigger ADD COLUMN IF NOT EXISTS secret_hint            VARCHAR(8);
+ALTER TABLE automation_trigger ADD COLUMN IF NOT EXISTS previous_secret_sealed TEXT;
+ALTER TABLE automation_trigger ADD COLUMN IF NOT EXISTS previous_secret_until  TIMESTAMPTZ;
+ALTER TABLE automation_trigger ADD COLUMN IF NOT EXISTS next_fire_at           TIMESTAMPTZ;
+ALTER TABLE automation_trigger ADD COLUMN IF NOT EXISTS last_fired_at          TIMESTAMPTZ;
+ALTER TABLE automation_trigger ADD COLUMN IF NOT EXISTS created_at             TIMESTAMPTZ NOT NULL DEFAULT now();
+DO $$ BEGIN
+    ALTER TABLE automation_trigger ADD CONSTRAINT ck_trigger_webhook_secret
+        CHECK (kind <> 'WEBHOOK' OR secret_sealed IS NOT NULL);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+CREATE INDEX IF NOT EXISTS idx_automation_trigger_due ON automation_trigger (next_fire_at)
+    WHERE kind = 'SCHEDULE' AND enabled;
+
+-- The limits of triggers, as rows of the active rule set (v2). A value already set is kept.
+UPDATE automation_settings SET rules = '{"maxTriggersPerAutomation": 5, "webhookSecretGraceHours": 24}'::jsonb || rules
+ WHERE version = 2;
