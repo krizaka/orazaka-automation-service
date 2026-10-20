@@ -46,9 +46,12 @@ class AutomationServiceGovernanceTest {
     GovernanceRules.assertNoForeignTier3Dependency(productionClasses, BASE_PACKAGE);
   }
 
-  // GOV-006: [ADR-035] permitAll rule is not invoked here: this service exposes no HTTP endpoint
-  // (an AMQP consumer) and has no SecurityConfig, so the rule inspected none. The sibling rule that
-  // catches an /internal controller with no SecurityConfig still runs below.
+  @Test
+  @DisplayName("[ADR-035] no /internal or /uploads path is ever permitAll")
+  void noPermitAllOnInternalOrUploads() {
+    GovernanceRules.assertNoPermitAllOnInternalOrUploads(
+        Path.of(System.getProperty("user.dir"), "src", "main", "java"));
+  }
 
   @Test
   @DisplayName("[ADR-035] /internal/v1 demands the SERVICE authority, not merely authentication")

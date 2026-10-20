@@ -94,6 +94,19 @@ INSERT INTO automation_settings (version, rules, active) VALUES (1, '{
   "catchUp": "ONCE"
 }'::jsonb, TRUE) ON CONFLICT (version) DO NOTHING;
 
+-- Rule set v2 (orazaka#195, ADR-084): the limits of the cloud automation API. v1's keys are kept, the new ones added;
+-- exactly one version is active. Code clamps every value to hard bounds and falls back to a default when a key is absent.
+INSERT INTO automation_settings (version, rules, active)
+SELECT 2, rules || '{
+  "maxAutomationsPerUser": 20,
+  "maxInputsBytes": 16384
+}'::jsonb, FALSE FROM automation_settings WHERE version = 1
+ON CONFLICT (version) DO NOTHING;
+UPDATE automation_settings SET active = FALSE
+ WHERE version = 1 AND active AND EXISTS (SELECT 1 FROM automation_settings WHERE version = 2);
+UPDATE automation_settings SET active = TRUE
+ WHERE version = 2 AND NOT EXISTS (SELECT 1 FROM automation_settings WHERE active);
+
 -- A machine that runs automations for a user: revocable token (only its hash is kept), a kill switch the server can set.
 CREATE TABLE IF NOT EXISTS device (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
