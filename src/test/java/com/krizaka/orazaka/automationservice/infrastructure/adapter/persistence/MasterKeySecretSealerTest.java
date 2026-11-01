@@ -101,13 +101,26 @@ class MasterKeySecretSealerTest {
         .isInstanceOf(IllegalStateException.class);
   }
 
+  /** A tail that always differs from the real one, whatever its last two characters are. */
+  static String forgedTail(String tail) {
+    String head = tail.substring(0, tail.length() - 2);
+    return head + ("AA".equals(tail.substring(tail.length() - 2)) ? "BB" : "AA");
+  }
+
+  @Test
+  @DisplayName("the forged tail differs even when the real one ends in AA")
+  void forgedTailAlwaysDiffers() {
+    assertThat(forgedTail("xyzAA")).isNotEqualTo("xyzAA");
+    assertThat(forgedTail("xyzQQ")).isNotEqualTo("xyzQQ");
+  }
+
   @Test
   @DisplayName("a tampered value does not open")
   void tampered() {
     UUID scope = UUID.randomUUID();
     String sealed = sealer.seal(scope, "secret");
     String[] parts = sealed.split("\\.");
-    String flipped = parts[4].substring(0, parts[4].length() - 2) + "AA";
+    String flipped = forgedTail(parts[4]);
     String forged = String.join(".", parts[0], parts[1], parts[2], parts[3], flipped);
     assertThatThrownBy(() -> sealer.open(scope, forged)).isInstanceOf(IllegalStateException.class);
     assertThatThrownBy(() -> sealer.open(scope, "garbage"))
