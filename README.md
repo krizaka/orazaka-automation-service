@@ -32,7 +32,8 @@ part of the [Orazaka platform](https://github.com/krizaka/orazaka) by [Krizaka](
 Connector automation (port `8082`): consumes `job.automation.*`, dispatches to Jira / Slack /
 WhatsApp / Messenger connectors or to a user's CLI agent (`job.agent.dispatch.{userId}`), Quartz
 scheduling, `evt.automation.telemetry`. Own database `orazaka_automation_db`
-(`infra/initdb/50-automation.sql`). User-facing notifications moved to
+(schema: Flyway `V1__automation_baseline.sql` in `src/main/resources/db/migration`, applied at
+startup; `infra/initdb/50-automation.sql` only creates the role and the database locally). User-facing notifications moved to
 [krizaka-notifications](https://github.com/krizaka/krizaka-notifications).
 
 ## Position in the platform
