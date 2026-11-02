@@ -20,9 +20,10 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 /**
- * The automation model of ADR-079 against the <b>real</b> {@code 50-automation.sql}: the rule set
- * is a row, a tool the catalogue refuses to run ({@code EXEC}) cannot be put to a human, and the
- * audit trail cannot be changed, cut or forged — each event follows the hash of the one before it.
+ * The automation model of ADR-079 against the <b>real</b> schema ({@code
+ * V1__automation_baseline.sql}, applied by Flyway as the owner role): the rule set is a row, a tool
+ * the catalogue refuses to run ({@code EXEC}) cannot be put to a human, and the audit trail cannot
+ * be changed, cut or forged — each event follows the hash of the one before it.
  */
 class AutomationSchemaIT {
 
@@ -54,6 +55,18 @@ class AutomationSchemaIT {
     }
     POSTGRES.start();
     ServiceRoles.assignPassword(POSTGRES, ROLE, PASSWORD);
+    org.flywaydb.core.Flyway.configure()
+        .dataSource(
+            "jdbc:postgresql://%s:%d/%s"
+                .formatted(
+                    POSTGRES.getHost(),
+                    POSTGRES.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT),
+                    DB),
+            ROLE,
+            PASSWORD)
+        .locations("classpath:db/migration")
+        .load()
+        .migrate();
     dataSource = new HikariDataSource();
     dataSource.setJdbcUrl(
         "jdbc:postgresql://"

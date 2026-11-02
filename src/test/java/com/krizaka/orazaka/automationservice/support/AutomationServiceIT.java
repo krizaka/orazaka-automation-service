@@ -15,10 +15,11 @@ import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 /**
- * A real PostgreSQL with this context's own bootstrap ({@code 50-automation.sql}, run as the
- * database's superuser exactly as {@code orazaka start} does), a real master keyring file, and the
- * service pointed at both under its own role. One container per JVM; nothing is mocked below the
- * HTTP port.
+ * A real PostgreSQL with this context's own bootstrap ({@code 50-automation.sql}: role and
+ * database, run as the superuser exactly as {@code orazaka start} does), a real master keyring
+ * file, and the service pointed at both under its own role, which applies {@code db/migration} at
+ * startup as it does everywhere (krizaka-internal#2255). One container per JVM; nothing is mocked
+ * below the HTTP port.
  */
 public abstract class AutomationServiceIT {
 
