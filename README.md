@@ -34,13 +34,13 @@ WhatsApp / Messenger connectors or to a user's CLI agent (`job.agent.dispatch.{u
 scheduling, `evt.automation.telemetry`. Own database `orazaka_automation_db`
 (schema: Flyway `V1__automation_baseline.sql` in `src/main/resources/db/migration`, applied at
 startup; `infra/initdb/50-automation.sql` only creates the role and the database locally). User-facing notifications moved to
-[krizaka-notifications](https://github.com/krizaka/krizaka-notifications).
+[krizaka-notifications](https://github.com/krizaka/krizaka-build/blob/main/krizaka-platform-kit/docs/notifications.md).
 
 ## Position in the platform
 
 | | |
 |:---|:---|
-| Depends on | [`orazaka-build`](https://github.com/krizaka/orazaka-build) · [`krizaka-billing`](https://github.com/krizaka/krizaka-billing) |
+| Depends on | [`orazaka-build`](https://github.com/krizaka/orazaka-build) · [`krizaka-billing`](https://github.com/krizaka/krizaka-build/tree/main/krizaka-billing) |
 | Used by | _no other Orazaka repository._ |
 | Workspace path | `orazaka-apps/services/orazaka-automation-service` |
 
