@@ -1,6 +1,6 @@
 spring:
   application:
-    name: orazaka-automation-worker
+    name: sovkora-automation-worker
   # Loom: AGENTS.md §4. This host is AMQP-first, but its web surface and outbound calls are
   # blocking all the same, and a service that opts out silently is how the setting drifted.
   threads:
@@ -87,18 +87,18 @@ logging:
       total-size-cap: 10MB
       max-history: 7
   level:
-    com.krizaka.orazaka.automation: DEBUG
+    com.krizaka.sovkora.automation: DEBUG
     org.springframework.amqp: INFO
 
-# ── Orazaka — service-owned wiring ────────────────────────────────────────────
+# ── Sovkora — service-owned wiring ────────────────────────────────────────────
 orazaka:
   # Asset encryption (ADR-054), as the job and studio services configure it: the sealed secrets of a trigger use the platform's
-  # master keyring (run-services.sh writes ~/.orazaka/master.key before the JVMs start). Without this the property default is the
-  # unresolved text « ${user.home}/.orazaka/master.key » and the service refuses to start (dev, 2026-10-20: container exit 1).
+  # master keyring (run-services.sh writes ~/.sovkora/master.key before the JVMs start). Without this the property default is the
+  # unresolved text « ${user.home}/.sovkora/master.key » and the service refuses to start (dev, 2026-10-20: container exit 1).
   assets:
     encryption:
       enabled: ${ASSETS_ENCRYPTION_ENABLED:true}
-      master-key-file: ${ASSETS_MASTER_KEY_FILE:${user.home}/.orazaka/master.key}
+      master-key-file: ${ASSETS_MASTER_KEY_FILE:${user.home}/.sovkora/master.key}
       block-size: ${ASSETS_BLOCK_SIZE:65536}
       accept-plaintext: ${ASSETS_ACCEPT_PLAINTEXT:false}
   automation-service:
@@ -126,7 +126,7 @@ krizaka:
       # The shared HS256 secret the identity service signs session and service tokens with.
       # krizaka-security validates every request locally with it and refuses to start when it is
       # shorter than 32 characters (256 bits).
-      secret: ${IDENTITY_JWT_SECRET:orazaka-local-dev-identity-jwt-secret-256bit!}
+      secret: ${IDENTITY_JWT_SECRET:sovkora-local-dev-identity-jwt-secret-256bit!}
   billing:
     # Bootstrap switch only — the enforcement mode is a row owned by the billing
     # service. Default OFF wires the no-op adapter, so this service behaves
@@ -136,12 +136,12 @@ krizaka:
     # Mints the SERVICE token /internal/v1/billing requires (ADR-035). It was absent from
     # every consumer, so BILLING_ENABLED=true crashed each of them at startup with "the
     # shared identity secret is required" — billing had never been switched on anywhere.
-    service-secret: ${IDENTITY_JWT_SECRET:orazaka-local-dev-identity-jwt-secret-256bit!}
+    service-secret: ${IDENTITY_JWT_SECRET:sovkora-local-dev-identity-jwt-secret-256bit!}
     connect-timeout: ${BILLING_CONNECT_TIMEOUT:500ms}
     read-timeout: ${BILLING_READ_TIMEOUT:2s}
   messaging:
     exchanges:
-      # Orazaka's bus: the Krizaka building blocks this service embeds (billing-client) publish and
+      # Sovkora's bus: the Krizaka building blocks this service embeds (billing-client) publish and
       # listen on it.
       events: orazaka.events
       dead-letter: orazaka.dlx

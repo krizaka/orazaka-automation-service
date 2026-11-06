@@ -1,6 +1,6 @@
 spring:
   application:
-    name: orazaka-automation-worker-test
+    name: sovkora-automation-worker-test
 
   # H2 in-memory for test isolation — no PostgreSQL required
   datasource:
@@ -35,4 +35,4 @@ server:
 
 logging:
   level:
-    com.krizaka.orazaka.automation: DEBUG
+    com.krizaka.sovkora.automation: DEBUG
