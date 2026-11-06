@@ -1,11 +1,11 @@
 package com.krizaka.sovkora.automationservice.infrastructure.adapter.studio;
 
+import com.krizaka.security.jwt.SessionJwtProperties;
+import com.krizaka.security.token.ServiceTokenProvider;
 import com.krizaka.sovkora.automationservice.domain.exception.StudioStartRefusedException;
 import com.krizaka.sovkora.automationservice.domain.model.RunStatus;
 import com.krizaka.sovkora.automationservice.domain.port.StudioRunStarter;
 import com.krizaka.sovkora.automationservice.infrastructure.config.StudioClientProperties;
-import com.krizaka.security.jwt.SessionJwtProperties;
-import com.krizaka.security.token.ServiceTokenProvider;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
